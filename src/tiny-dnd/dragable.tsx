@@ -1,5 +1,6 @@
 import { Slot } from "@radix-ui/react-slot";
 import { ReactNode, useId, useRef } from "react";
+import { createRoot } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
 import { DRAGABLE_DRAGGING, DROPABLE_RECEIVING, setDataset } from "./utils";
 
@@ -18,6 +19,7 @@ export function Dragable<T extends object>({
    onDropValue,
    className,
    renderDragLayer,
+   disabled,
    ...props
 }: {
    isDroppable?: boolean;
@@ -26,6 +28,7 @@ export function Dragable<T extends object>({
    value?: string;
    data?: T;
    className?: string;
+   disabled?: boolean;
    onDropValue?: (newValue: string, oldValue: string) => void;
    onDropData?: (newData: T, oldDate: T) => void;
    // TODO: I want the dataset for the dragable to be available to the renderDragLayer
@@ -34,7 +37,6 @@ export function Dragable<T extends object>({
    const id = useId();
    const Comp = asChild ? Slot : "div";
    const ref = useRef<HTMLDivElement | null>(null); // Used by the slot
-   const ghostRef = useRef<HTMLDivElement | null>(null); // Used for preview
 
    function isSelf(e: React.DragEvent<HTMLDivElement>) {
       if (!ref.current) return false;
@@ -79,17 +81,28 @@ export function Dragable<T extends object>({
       delete e.currentTarget.dataset[DROPABLE_RECEIVING];
    }
 
+   // Responsible for setting the data and preparing all the things
    function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
+      if (disabled) return;
       console.log("handle drag start");
       e.currentTarget.dataset[DRAGABLE_DRAGGING] = DRAGABLE_DRAGGING;
-      e.currentTarget.dataset.wasoncedragged = "wasoncedragged";
       console.log("dataset start", JSON.stringify(e.currentTarget.dataset));
 
       setDataset({ e, value: value ?? "", data, dragableElementId: id });
+
       e.dataTransfer.effectAllowed = "move";
-      if (ghostRef.current) {
-         ghostRef.current.classList.remove("hidden");
-         e.dataTransfer.setDragImage(ghostRef.current, 0, 0);
+
+      if (renderDragLayer) {
+         /** This is the craziest hack I've ever made! */
+         const el = document.createElement("div");
+         const root = createRoot(el!);
+         document.body.appendChild(el);
+         root.render(<>{renderDragLayer(null)}</>);
+         console.log("elly!", el);
+         e.dataTransfer.setDragImage(el, 0, 0);
+         setTimeout(() => {
+            el.remove();
+         }, 0);
       }
    }
 
@@ -111,7 +124,7 @@ export function Dragable<T extends object>({
          <Comp
             ref={ref}
             id={id}
-            draggable
+            draggable={!disabled}
             onDrop={handleDrop}
             onDragOver={isDroppable ? handleDropableDragOver : undefined}
             onDragExit={handleDropableDragExit}
@@ -123,12 +136,6 @@ export function Dragable<T extends object>({
          >
             {children}
          </Comp>
-         {renderDragLayer && (
-            // TODO: Maybe we can clone a hidden element instead of rendering it off screen
-            <div ref={ghostRef} className="top-[-1000px] left-[-1000px] absolute">
-               {renderDragLayer(ref.current)}
-            </div>
-         )}
       </>
    );
 }
