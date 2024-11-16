@@ -15,9 +15,9 @@ export const employees: Array<{
    id: string;
    name: string;
 }> = [
-   { id: "1", name: "Mikkel" },
-   { id: "2", name: "Lars" },
-   { id: "3", name: "Andri" },
+   { id: "1", name: "Zero Cool" },
+   { id: "2", name: "Acid Burn" },
+   { id: "3", name: "Cerialkiller" },
 ];
 
 export const days = ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-06", "2024-01-07"];

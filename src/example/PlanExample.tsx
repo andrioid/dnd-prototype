@@ -50,7 +50,7 @@ export function PlanExample() {
          <div className="grid gap-2 items-center grid-cols-8plus grid-rows-2 overflow-x-auto">
             {employees.map((employee) => (
                <Fragment key={employee.id}>
-                  <div>{employee.name}</div>
+                  <div className="select-none">{employee.name}</div>
                   {days.map((day) => {
                      return (
                         <Dropable

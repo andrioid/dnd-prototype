@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader } from "./components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "./components/ui/sidebar";
 import { UnplannedTasks } from "./example/UnplannedTasks";
 
 export function AppSidebar() {
@@ -6,10 +6,7 @@ export function AppSidebar() {
       <Sidebar>
          <SidebarHeader />
          <SidebarContent>
-            <SidebarGroup>
-               <UnplannedTasks />
-            </SidebarGroup>
-            <SidebarGroup />
+            <UnplannedTasks />
          </SidebarContent>
          <SidebarFooter />
       </Sidebar>

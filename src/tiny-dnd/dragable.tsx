@@ -1,3 +1,4 @@
+import { useCanHover } from "@/example/use-canhover";
 import { Slot } from "@radix-ui/react-slot";
 import { ReactNode, useId, useRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -37,6 +38,7 @@ export function Dragable<T extends object>({
    const id = useId();
    const Comp = asChild ? Slot : "div";
    const ref = useRef<HTMLDivElement | null>(null); // Used by the slot
+   const canHover = useCanHover();
 
    function isSelf(e: React.DragEvent<HTMLDivElement>) {
       if (!ref.current) return false;
@@ -92,7 +94,7 @@ export function Dragable<T extends object>({
 
       e.dataTransfer.effectAllowed = "move";
 
-      if (renderDragLayer) {
+      if (renderDragLayer && canHover) {
          /** This is the craziest hack I've ever made! */
          const el = document.createElement("div");
          const root = createRoot(el!);
