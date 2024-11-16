@@ -1,8 +1,9 @@
-import { ComponentProps, useState } from "react";
+import { ComponentProps, useEffect, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { twMerge } from "tailwind-merge";
 import { Dragable } from "../tiny-dnd/dragable";
 import { Dropable } from "../tiny-dnd/dropable";
+import { DRAGABLE_CANDROP } from "../tiny-dnd/utils";
 
 type Task = {
    id: string;
@@ -77,7 +78,7 @@ export function PlanExample() {
                            onDropData={(data) => console.log("dropped data", data)}
                         >
                            <div className="p-2 min-h-32 h-full bg-gray-100">
-                              <p className="text-gray-700 text-center text-xs mb-4">{day}</p>
+                              <p className="select-none text-gray-700 text-center text-xs mb-4">{day}</p>
                               {tasks
                                  .filter((task) => task.employeeId.includes(employee.id))
                                  .filter((task) => task.day.includes(day))
@@ -125,12 +126,55 @@ function TaskCard({
    onDropData?: ComponentProps<typeof Dragable>["onDropData"];
 }) {
    return (
-      <Dragable<Task> value={task.id} isDroppable={isDroppable} onDropValue={onDropValue} onDropData={onDropData} data={task}>
+      <Dragable<Task>
+         value={task.id}
+         isDroppable={isDroppable}
+         onDropValue={onDropValue}
+         onDropData={onDropData}
+         data={task}
+         renderDragLayer={() => (
+            <div key={task.id} className="shadow-xl bg-pink-50 p-4 rounded-md">
+               {task.name}
+            </div>
+         )}
+      >
          <div
-            className={twMerge("select-none cursor-grab data-[dragging]:drop-shadow-xl data-[dropping]:pt-16", "transition-[padding] duration-150 ease-linear")}
+            // Container used for padding and transition stuff
+            // Child used for card stylings
+            className={twMerge(
+               "group/drag select-none cursor-grab",
+               "transition-[padding] duration-150 ease-linear",
+               "data-[receiving]:pt-16 data-[dropable]:rotate-45",
+               "data-[debug]:border-2 data-[debug]:border-pink-200",
+            )}
          >
-            <div className="bg-white p-4 rounded-md border ">{task.name}</div>
+            <div className="bg-white group-data-[dragging]/drag:shadow-xl group-data-[debug]/drag:bg-pnk-100 p-4 rounded-md border ">{task.name}</div>
          </div>
       </Dragable>
    );
+}
+
+function DragLayerExample({ parentEl }: { parentEl: HTMLDivElement | null }) {
+   const [dropable, setDropable] = useState(false);
+   useEffect(() => {
+      if (!parentEl) return;
+      const observer = new MutationObserver((mutationsList) => {
+         for (const mutation of mutationsList) {
+            //console.log("attribute change", mutation.attributeName);
+            // almost works, if I can get candrop to the parent from dropzone
+            if (mutation.type === "attributes" && mutation.attributeName === `data-` + DRAGABLE_CANDROP) {
+               const val = !!parentEl.dataset[DRAGABLE_CANDROP];
+               setDropable(val);
+               //console.log("Dataset changed:", val);
+            }
+         }
+      });
+
+      observer.observe(parentEl, { attributes: true });
+
+      return () => {
+         observer.disconnect();
+      };
+   }, [parentEl]);
+   return <div className={twMerge("bg-purple-200 p-6", dropable && "bg-green-200")}>poop</div>;
 }
