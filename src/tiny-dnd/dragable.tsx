@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { ReactNode, useId, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { twMerge } from "tailwind-merge";
+import { useGhostElement } from "./use-ghost-element";
 import { DRAGABLE_DRAGGING, DROPABLE_RECEIVING, setDataset } from "./utils";
 
 export type DragData<T extends object> = {
@@ -38,6 +39,7 @@ export function Dragable<T extends object>({
    const id = useId();
    const Comp = asChild ? Slot : "div";
    const ref = useRef<HTMLDivElement | null>(null); // Used by the slot
+   useGhostElement(ref, renderDragLayer);
    const canHover = useCanHover();
 
    function isSelf(e: React.DragEvent<HTMLDivElement>) {
@@ -94,17 +96,32 @@ export function Dragable<T extends object>({
 
       e.dataTransfer.effectAllowed = "move";
 
-      if (renderDragLayer && canHover) {
-         /** This is the craziest hack I've ever made! */
-         const el = document.createElement("div");
-         const root = createRoot(el!);
-         document.body.appendChild(el);
-         root.render(<>{renderDragLayer(null)}</>);
-         console.log("elly!", el);
-         e.dataTransfer.setDragImage(el, 0, 0);
-         setTimeout(() => {
-            el.remove();
-         }, 0);
+      if (false && renderDragLayer && canHover) {
+         // Plan:
+         // 1. Hide this element
+         // 2. Spawn a renderDragLayer element somewhere
+         if (ref.current) {
+            console.log("hacking stuff");
+            ref.current.style.visibility = "hidden";
+            const el = document.createElement("div");
+            const root = createRoot(el!);
+            document.body.append(el);
+            el.style.position = "fixed";
+            el.style.left = "0";
+            el.style.top = "0";
+            el.style.zIndex = "20";
+            root.render(<>{renderDragLayer(null)}</>);
+         }
+         // /** This is the craziest hack I've ever made! */
+         // const el = document.createElement("div");
+         // const root = createRoot(el!);
+         // document.body.appendChild(el);
+         // root.render(<>{renderDragLayer(null)}</>);
+         // console.log("elly!", el);
+         // e.dataTransfer.setDragImage(el, 0, 0);
+         // setTimeout(() => {
+         //    el.remove();
+         // }, 0);
       }
    }
 
